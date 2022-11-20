@@ -3,7 +3,9 @@ use crossbeam_channel::{Receiver, Sender};
 use indicatif::{ProgressBar, ProgressStyle};
 use ion_shell::Shell;
 use log::{debug, error, info, trace, warn};
-use simplelog::*;
+use simplelog::{
+    CombinedLogger, Config, LevelFilter, SharedLogger, TermLogger, TerminalMode, WriteLogger,
+};
 use std::{
     fs::File,
     io::{self, BufRead, BufReader},
@@ -107,7 +109,7 @@ fn add_jobs(
             }
         }
         debug!("Starting {}: '{}'", i, command.replace("{}", &arg));
-        tx.send(arg.to_string()).unwrap();
+        tx.send(arg).unwrap();
         i += 1;
     };
     if arguments.is_empty() {
@@ -125,12 +127,12 @@ fn add_jobs(
             };
             for arg in BufReader::new(file).lines() {
                 let arg = arg.expect("Could not read the file");
-                start(arg)
+                start(arg);
             }
         } else {
             for arg in BufReader::new(io::stdin()).lines() {
                 let arg = arg.expect("Could not stdin");
-                start(arg)
+                start(arg);
             }
         }
     } else {
@@ -193,10 +195,10 @@ fn start_workers(
                 results
                     .send(JobResult {
                         seq,
+                        exit_code,
                         start,
                         duration,
                         cmd,
-                        exit_code,
                     })
                     .unwrap();
             }
