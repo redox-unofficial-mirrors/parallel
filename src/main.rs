@@ -4,7 +4,8 @@ use indicatif::{ProgressBar, ProgressStyle};
 use ion_shell::Shell;
 use log::{debug, error, info, trace, warn};
 use simplelog::{
-    CombinedLogger, Config, LevelFilter, SharedLogger, TermLogger, TerminalMode, WriteLogger,
+    ColorChoice, CombinedLogger, Config, LevelFilter, SharedLogger, TermLogger, TerminalMode,
+    WriteLogger,
 };
 use std::{
     fs::File,
@@ -148,13 +149,16 @@ fn create_logger(opts: &Opts) {
         (_, 2) => LevelFilter::Debug,
         _ => LevelFilter::Trace,
     };
-    let config = Config::default();
-    let mut loggers: Vec<Box<dyn SharedLogger>> =
-        vec![TermLogger::new(level, config, TerminalMode::Stderr).unwrap()];
+    let mut loggers: Vec<Box<dyn SharedLogger>> = vec![TermLogger::new(
+        level,
+        Config::default(),
+        TerminalMode::Stderr,
+        ColorChoice::Auto,
+    )];
     if let Some(file) = &opts.log {
         loggers.push(WriteLogger::new(
             LevelFilter::Info,
-            config,
+            Config::default(),
             File::create(file).unwrap(),
         ));
     }
