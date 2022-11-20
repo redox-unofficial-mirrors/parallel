@@ -10,7 +10,7 @@ crossbeam-channel = "0.5"
 indicatif = "0.17"
 ion-shell = {git = "https://gitlab.redox-os.org/redox-os/ion"}
 num_cpus = "1.14"
-structopt = "0.2"
+structopt = "0.3"
 
 # logging
 log = "0.4"
