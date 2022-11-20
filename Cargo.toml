@@ -1,8 +1,8 @@
 [package]
 authors = ["Xavier L'Heureux <xavier.lheureux@icloud.com>"]
-edition = "2018"
+edition = "2021"
 name = "parallelion"
-version = "0.1.0"
+version = "0.1.1"
 
 [dependencies]
 chrono = {version = "0.4", default-features = false, features = ["clock"]}
