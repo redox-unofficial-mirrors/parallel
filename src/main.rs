@@ -241,6 +241,7 @@ fn main() {
                 .template(
                     "{prefix:.green}: [{elapsed_precise}] [{bar:40}] {pos:>7}/{len:7} ({eta})",
                 )
+                .expect("cannot create Progress Bar Style")
                 .progress_chars("█▇▆▅▄▃▂▁  "),
         );
         pb.set_prefix("Progress");
