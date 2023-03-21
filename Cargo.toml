@@ -1,17 +1,17 @@
 [package]
-name = "parallelion"
-version = "0.1.0"
 authors = ["Xavier L'Heureux <xavier.lheureux@icloud.com>"]
-edition = "2018"
+edition = "2021"
+name = "parallelion"
+version = "0.1.1"
 
 [dependencies]
-ion-shell = { git = "https://gitlab.redox-os.org/redox-os/ion" }
-num_cpus = "0.2"
-structopt = "0.2"
-crossbeam-channel = "0.3"
-chrono = "0.4"
-indicatif = "0.11"
+chrono = {version = "0.4", default-features = false, features = ["clock"]}
+crossbeam-channel = "0.5"
+indicatif = "0.17"
+ion-shell = {git = "https://gitlab.redox-os.org/redox-os/ion"}
+num_cpus = "1.14"
+structopt = "0.3"
 
 # logging
 log = "0.4"
-simplelog = "0.6"
+simplelog = "0.12"

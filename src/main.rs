@@ -3,7 +3,10 @@ use crossbeam_channel::{Receiver, Sender};
 use indicatif::{ProgressBar, ProgressStyle};
 use ion_shell::Shell;
 use log::{debug, error, info, trace, warn};
-use simplelog::*;
+use simplelog::{
+    ColorChoice, CombinedLogger, Config, LevelFilter, SharedLogger, TermLogger, TerminalMode,
+    WriteLogger,
+};
 use std::{
     fs::File,
     io::{self, BufRead, BufReader},
@@ -107,7 +110,7 @@ fn add_jobs(
             }
         }
         debug!("Starting {}: '{}'", i, command.replace("{}", &arg));
-        tx.send(arg.to_string()).unwrap();
+        tx.send(arg).unwrap();
         i += 1;
     };
     if arguments.is_empty() {
@@ -125,12 +128,12 @@ fn add_jobs(
             };
             for arg in BufReader::new(file).lines() {
                 let arg = arg.expect("Could not read the file");
-                start(arg)
+                start(arg);
             }
         } else {
             for arg in BufReader::new(io::stdin()).lines() {
                 let arg = arg.expect("Could not stdin");
-                start(arg)
+                start(arg);
             }
         }
     } else {
@@ -146,13 +149,16 @@ fn create_logger(opts: &Opts) {
         (_, 2) => LevelFilter::Debug,
         _ => LevelFilter::Trace,
     };
-    let config = Config::default();
-    let mut loggers: Vec<Box<dyn SharedLogger>> =
-        vec![TermLogger::new(level, config, TerminalMode::Stderr).unwrap()];
+    let mut loggers: Vec<Box<dyn SharedLogger>> = vec![TermLogger::new(
+        level,
+        Config::default(),
+        TerminalMode::Stderr,
+        ColorChoice::Auto,
+    )];
     if let Some(file) = &opts.log {
         loggers.push(WriteLogger::new(
             LevelFilter::Info,
-            config,
+            Config::default(),
             File::create(file).unwrap(),
         ));
     }
@@ -193,10 +199,10 @@ fn start_workers(
                 results
                     .send(JobResult {
                         seq,
+                        exit_code,
                         start,
                         duration,
                         cmd,
-                        exit_code,
                     })
                     .unwrap();
             }
@@ -228,17 +234,25 @@ fn main() {
     } else {
         ProgressBar::new(opts.arguments.len() as u64)
     };
-    pb.set_style(
-        ProgressStyle::default_bar()
-            .template("{prefix:.green}: [{elapsed_precise}] [{bar:40}] {pos:>7}/{len:7} ({eta})")
-            .progress_chars("█▇▆▅▄▃▂▁  "),
-    );
-    pb.set_prefix("Progress");
+
+    if opts.progress {
+        pb.set_style(
+            ProgressStyle::default_bar()
+                .template(
+                    "{prefix:.green}: [{elapsed_precise}] [{bar:40}] {pos:>7}/{len:7} ({eta})",
+                )
+                .expect("cannot create Progress Bar Style")
+                .progress_chars("█▇▆▅▄▃▂▁  "),
+        );
+        pb.set_prefix("Progress");
+    }
     add_jobs(command, opts.arguments, opts.argfile, opts.interactive, tx);
 
     let mut exit = 0;
     while let Ok(result) = rrx.recv() {
-        pb.inc(1);
+        if opts.progress {
+            pb.inc(1);
+        }
         if !opts.dry_run {
             info!("'{}' took {}s", result.cmd, result.duration);
             if result.exit_code != 0 {
@@ -254,6 +268,8 @@ fn main() {
             }
         }
     }
-    pb.finish_with_message("done");
+    if opts.progress {
+        pb.finish_with_message("done");
+    }
     std::process::exit(exit);
 }
